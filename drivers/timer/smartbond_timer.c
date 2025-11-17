@@ -18,6 +18,7 @@
 #define CYC_PER_TICK k_ticks_to_cyc_ceil32(1)
 #define TICK_TO_CYC(tick) k_ticks_to_cyc_ceil32(tick)
 #define CYC_TO_TICK(cyc) k_cyc_to_ticks_ceil32(cyc)
+//#define CYC_TO_TICK(cyc) k_cyc_to_ticks_floor32(cyc)
 #define MAX_TICKS (((COUNTER_SPAN / 2) - CYC_PER_TICK) / (CYC_PER_TICK))
 #define SMARTBOND_CLOCK_CONTROLLER DEVICE_DT_GET(DT_NODELABEL(osc))
 /* Margin values are based on DA1469x characterization data */
@@ -112,6 +113,7 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 	if (!IS_ENABLED(CONFIG_TICKLESS_KERNEL)) {
 		return;
 	}
+	GPIO->P1_SET_DATA_REG = BIT(1);
 
 	if (ticks == K_TICKS_FOREVER) {
 		/* FIXME we could disable timer here */
@@ -126,7 +128,7 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 	 * as soon as system is awaken. Following code makes sure that
 	 * system never goes to sleep for longer time that watchdog reload value.
 	 */
-	if (IS_ENABLED(CONFIG_PM)) {
+	if (IS_ENABLED(CONFIG_PM) && ticks > 1) {
 		uint32_t watchdog_expire_ticks;
 
 		if (CRG_TOP->CLK_RCX_REG & CRG_TOP_CLK_RCX_REG_RCX_ENABLE_Msk) {
@@ -154,6 +156,7 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 	ticks = CLAMP(ticks - 1, 0, (int32_t)MAX_TICKS);
 
 	schedule_next_interrupt(ticks);
+	GPIO->P1_RESET_DATA_REG = BIT(1);
 }
 
 uint32_t sys_clock_elapsed(void)
@@ -162,7 +165,11 @@ uint32_t sys_clock_elapsed(void)
 		return 0;
 	}
 
-	return CYC_TO_TICK(timer_val_32_noupdate() - last_isr_val);
+	uint32_t v = CYC_TO_TICK(timer_val_32_noupdate() - last_isr_val);
+//	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(v >> 8);
+//	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(v);
+	return v;
+//	return CYC_TO_TICK(timer_val_32_noupdate() - last_isr_val);
 }
 
 uint32_t sys_clock_cycle_get_32(void)
@@ -180,6 +187,16 @@ void sys_clock_disable(void)
 	TIMER2->TIMER2_CTRL_REG &= ~TIMER2_TIMER2_CTRL_REG_TIM_EN_Msk;
 }
 
+//void sys_trace_idle_exit(void)
+//{
+//	GPIO->P1_RESET_DATA_REG = BIT(4);
+//}
+//
+//void sys_trace_idle(void)
+//{
+//	GPIO->P1_SET_DATA_REG = BIT(4);
+//}
+
 static void timer2_isr(const void *arg)
 {
 	uint32_t val;
@@ -188,20 +205,27 @@ static void timer2_isr(const void *arg)
 
 	ARG_UNUSED(arg);
 
+	GPIO->P1_SET_DATA_REG = BIT(0);
 	TIMER2->TIMER2_CLEAR_IRQ_REG = 1;
 
 	val = timer_val_32();
+//	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(val >> 16);
+	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(val >> 8);
+	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(val >> 0);
 	delta = (int32_t)(val - last_isr_val_rounded);
 	last_isr_val = val;
 	dticks = CYC_TO_TICK(delta);
 	last_isr_val_rounded += TICK_TO_CYC(dticks);
 	announced_ticks += dticks;
+	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(dticks >> 8);
+	UART2->UART2_RBR_THR_DLL_REG = (uint8_t)(dticks >> 0);
 	sys_clock_announce(dticks);
 
 	/* For tick-based kernel, schedule interrupt after 1 tick */
 	if (!IS_ENABLED(CONFIG_TICKLESS_KERNEL)) {
 		schedule_next_interrupt(1);
 	}
+	GPIO->P1_RESET_DATA_REG = BIT(0);
 }
 
 static int sys_clock_driver_init(void)
@@ -218,6 +242,24 @@ static int sys_clock_driver_init(void)
 	da1469x_pdc_set(pdc_idx);
 	da1469x_pdc_ack(pdc_idx);
 #endif
+	GPIO->P1_00_MODE_REG = 0x300;
+	GPIO->P1_SET_DATA_REG = BIT(0);
+	GPIO->P1_RESET_DATA_REG = BIT(0);
+	GPIO->P1_01_MODE_REG = 0x300;
+	GPIO->P1_SET_DATA_REG = BIT(1);
+	GPIO->P1_RESET_DATA_REG = BIT(1);
+	GPIO->P1_02_MODE_REG = 0x300;
+	GPIO->P1_SET_DATA_REG = BIT(2);
+	GPIO->P1_RESET_DATA_REG = BIT(2);
+	GPIO->P1_03_MODE_REG = 0x300;
+	GPIO->P1_SET_DATA_REG = BIT(3);
+	GPIO->P1_RESET_DATA_REG = BIT(3);
+	GPIO->P1_04_MODE_REG = 0x300;
+	GPIO->P1_SET_DATA_REG = BIT(4);
+	GPIO->P1_RESET_DATA_REG = BIT(4);
+	GPIO->P1_05_MODE_REG = 0x300;
+	GPIO->P1_SET_DATA_REG = BIT(5);
+	GPIO->P1_RESET_DATA_REG = BIT(5);
 
 	TIMER2->TIMER2_CTRL_REG = 0;
 	TIMER2->TIMER2_PRESCALER_REG = 0;

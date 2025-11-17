@@ -231,6 +231,8 @@ bool pm_system_suspend(int32_t kernel_ticks)
 	if (IS_ENABLED(CONFIG_PM_STATS)) {
 		pm_stats_start();
 	}
+	GPIO->P1_SET_DATA_REG = BIT(4);
+
 	/* Enter power state */
 	pm_state_notify(true);
 	atomic_set_bit(z_post_ops_required, id);
@@ -245,6 +247,7 @@ bool pm_system_suspend(int32_t kernel_ticks)
 	}
 
 	pm_system_resume();
+	GPIO->P1_RESET_DATA_REG = BIT(4);
 	k_sched_unlock();
 	SYS_PORT_TRACING_FUNC_EXIT(pm, system_suspend, ticks,
 				   z_cpus_pm_state[id] ?

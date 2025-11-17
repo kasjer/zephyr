@@ -93,6 +93,9 @@ ZTEST(threads_scheduling, test_slice_scheduling)
 	int old_prio = k_thread_priority_get(k_current_get());
 	int count = 0;
 
+	GPIO->P1_SET_DATA_REG = BIT(3);
+	GPIO->P1_RESET_DATA_REG = BIT(3);
+
 	thread_idx = 0;
 
 	/* disable timeslice */

@@ -46,7 +46,9 @@ bool pm_suspend_devices(void)
 			continue;
 		}
 
+	GPIO->P1_SET_DATA_REG = BIT(4);
 		ret = pm_device_action_run(dev, PM_DEVICE_ACTION_SUSPEND);
+	GPIO->P1_RESET_DATA_REG = BIT(4);
 		/* ignore devices not supporting or already at the given state */
 		if ((ret == -ENOSYS) || (ret == -ENOTSUP) || (ret == -EALREADY)) {
 			continue;

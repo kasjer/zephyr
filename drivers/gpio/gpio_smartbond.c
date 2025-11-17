@@ -318,7 +318,7 @@ static void gpio_latch_inst(mem_addr_t data_reg, mem_addr_t mode_reg, mem_addr_t
 	for (idx = 0; idx < ngpios; idx++, mode_reg += 4) {
 		mode[idx] = sys_read32(mode_reg);
 	}
-	sys_write32(BIT_MASK(ngpios), latch_reg);
+//	sys_write32(BIT_MASK(ngpios), latch_reg);
 
 }
 
@@ -331,7 +331,7 @@ static void gpio_unlatch_inst(mem_addr_t data_reg, mem_addr_t mode_reg, mem_addr
 	for (idx = 0; idx < ngpios; idx++, mode_reg += 4) {
 		sys_write32(mode[idx], mode_reg);
 	}
-	sys_write32(BIT_MASK(ngpios), latch_reg);
+//	sys_write32(BIT_MASK(ngpios), latch_reg);
 }
 
 static void gpio_latch(const struct device *dev)
@@ -363,12 +363,12 @@ static int gpio_smartbond_pm_action(const struct device *dev,
 
 	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
-		da1469x_pd_acquire(MCU_PD_DOMAIN_COM);
+//		da1469x_pd_acquire(MCU_PD_DOMAIN_COM);
 		gpio_unlatch(dev);
 		break;
 	case PM_DEVICE_ACTION_SUSPEND:
 		gpio_latch(dev);
-		da1469x_pd_release(MCU_PD_DOMAIN_COM);
+//		da1469x_pd_release(MCU_PD_DOMAIN_COM);
 		break;
 	default:
 		ret = -ENOTSUP;

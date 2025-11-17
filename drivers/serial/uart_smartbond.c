@@ -675,6 +675,10 @@ static int uart_disable(const struct device *dev)
 	/* Store IER register in case UART will go to sleep */
 	data->runtime_cfg.ier_reg_val = config->regs->UART2_IER_DLH_REG;
 
+	if (config->regs->UART2_USR_REG & UART2_UART2_USR_REG_UART_RFNE_Msk ||
+		!(config->regs->UART2_USR_REG & UART2_UART2_USR_REG_UART_TFE_Msk)) {
+		return -EBUSY;
+	}
 	if (config->regs->UART2_USR_REG & UART2_UART2_USR_REG_UART_RFNE_Msk) {
 		return -EBUSY;
 	}

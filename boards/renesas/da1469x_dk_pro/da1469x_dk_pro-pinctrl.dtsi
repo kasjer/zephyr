@@ -17,6 +17,16 @@
 		};
 	};
 
+	uart2_default: uart2_default {
+		group1 {
+			pinmux = <SMARTBOND_PINMUX(UART2_TX, 1, 13)>;
+		};
+		group2 {
+			pinmux = <SMARTBOND_PINMUX(UART2_RX, 1, 14)>;
+			bias-pull-up;
+		};
+	};
+
 	i2c_default: i2c_default {
 		group1 {
 			pinmux = <SMARTBOND_PINMUX(I2C_SDA, 0, 31)>,

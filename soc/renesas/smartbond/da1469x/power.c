@@ -26,7 +26,9 @@ void pm_state_set(enum pm_state state, uint8_t substate_id)
 		__disable_irq();
 		arch_irq_unlock(0);
 
+		GPIO->P1_SET_DATA_REG = BIT(5);
 		da1469x_sleep();
+		GPIO->P1_RESET_DATA_REG = BIT(5);
 
 		break;
 	default:

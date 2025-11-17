@@ -188,7 +188,15 @@
 	status = "okay";
 	pinctrl-0 = <&uart_default>;
 	pinctrl-names = "default";
-	rx-wake-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+//	interrupts = < 0x5 0x1 >;
+//	rx-wake-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+};
+
+&uart2 {
+	current-speed = <1000000>;
+	status = "okay";
+	pinctrl-0 = <&uart2_default>;
+	pinctrl-names = "default";
 };
 
 zephyr_udc0: &usbd {
